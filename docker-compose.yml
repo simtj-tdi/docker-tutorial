@@ -1,0 +1,77 @@
+version: "3"
+
+networks: 
+    demo:
+
+services:
+    nginx:
+        image: nginx:stable-alpine
+        container_name: nginx
+        ports: 
+            - "82:80"
+        volumes:
+            - ./src:/var/www/html
+            - ./.docker/nginx/conf.d:/etc/nginx/conf.d
+        depends_on:
+            - php
+            - mysql
+        restart: unless-stopped            
+        networks: 
+            - demo
+
+    php:
+        build: ./.docker/php
+        container_name: php        
+        working_dir: /var/www/html
+        ports: 
+            - "9010:9010"        
+        volumes:
+            - ./src:/var/www/html
+        depends_on:
+            - mysql            
+        restart: unless-stopped            
+        networks: 
+            - demo
+
+    mysql:
+        image: mysql:8
+        environment:
+            MYSQL_DATABASE: demo
+            MYSQL_USER: secret
+            MYSQL_PASSWORD: secret
+            MYSQL_ROOT_PASSWORD: password        
+        container_name: mysql
+        ports: 
+            - "3326:3306"
+        volumes:
+            - ./.docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+            - mysqldata:/var/lib/mysql           
+        restart: unless-stopped            
+        networks: 
+            - demo
+
+    db-admin:
+        image: phpmyadmin/phpmyadmin
+        depends_on:
+            - mysql
+        ports:
+            - "8116:80"
+        environment:
+            PMA_HOST: mysql
+        restart: unless-stopped
+        networks: 
+            - demo
+
+    editor:
+        image: codercom/code-server
+        ports:
+            - "8216:8080"
+        volumes:
+            - ./src:/home/coder/project
+        environment:
+            PASSWORD: codepass
+        restart: unless-stopped            
+
+
+volumes:
+    mysqldata:
