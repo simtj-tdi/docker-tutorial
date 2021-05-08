@@ -27,6 +27,7 @@ services:
             - "9010:9010"        
         volumes:
             - ./src:/var/www/html
+            - ./.docker/php/ini/php.ini:/usr/local/etc/php/php.ini
         depends_on:
             - mysql            
         restart: unless-stopped            
